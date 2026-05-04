@@ -1,3 +1,5 @@
+![Fast Chicken Banner](FastChicken.png)
+
 # Fast Chicken 🐔
 
 Fast Chicken is a 2D endless runner game developed in Unity.

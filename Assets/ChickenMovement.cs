@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
-public class ChickenMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
@@ -15,6 +16,9 @@ public class ChickenMovement : MonoBehaviour
     public float groundCheckRadius = 0.35f;
     public LayerMask groundLayer;
 
+    [Header("UI")]
+    public TextMeshProUGUI coinsText;
+
     private Rigidbody2D rb;
     private Animator anim;
 
@@ -26,19 +30,22 @@ public class ChickenMovement : MonoBehaviour
 
     private bool isDead = false;
 
+    private int coins = 0;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+
+        UpdateCoinsUI();
     }
 
     void Update()
     {
-        // JEŚLI MARTWY - STOP
         if (isDead)
             return;
 
-        // LEWO / PRAWO
+        // RUCH
         moveInput = Input.GetAxisRaw("Horizontal");
 
         // SPRAWDZANIE ZIEMI
@@ -53,7 +60,6 @@ public class ChickenMovement : MonoBehaviour
         {
             jumpCount = 0;
 
-            // IDLE
             if (moveInput == 0)
             {
                 anim.Play("Idle");
@@ -65,7 +71,8 @@ public class ChickenMovement : MonoBehaviour
         }
 
         // SKOK
-        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
+        if (Input.GetKeyDown(KeyCode.Space)
+            && jumpCount < maxJumps)
         {
             Jump();
         }
@@ -76,14 +83,16 @@ public class ChickenMovement : MonoBehaviour
             anim.Play("Run");
         }
 
-        // OBRÓT SPRITE
+        // OBRÓT
         if (moveInput > 0)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            transform.localScale =
+                new Vector3(1, 1, 1);
         }
         else if (moveInput < 0)
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            transform.localScale =
+                new Vector3(-1, 1, 1);
         }
     }
 
@@ -92,7 +101,6 @@ public class ChickenMovement : MonoBehaviour
         if (isDead)
             return;
 
-        // RUCH
         rb.linearVelocity = new Vector2(
             moveInput * moveSpeed,
             rb.linearVelocity.y
@@ -101,13 +109,11 @@ public class ChickenMovement : MonoBehaviour
 
     void Jump()
     {
-        // RESET PRĘDKOŚCI Y
         rb.linearVelocity = new Vector2(
             rb.linearVelocity.x,
             0f
         );
 
-        // SIŁA SKOKU
         rb.AddForce(
             Vector2.up * jumpForce,
             ForceMode2D.Impulse
@@ -115,7 +121,6 @@ public class ChickenMovement : MonoBehaviour
 
         jumpCount++;
 
-        // ANIMACJE SKOKU
         if (jumpCount == 1)
         {
             anim.Play("Jump", 0, 0f);
@@ -126,7 +131,23 @@ public class ChickenMovement : MonoBehaviour
         }
     }
 
-    // DOTKNIĘCIE PRZESZKODY
+    // ZBIERANIE COINÓW
+    public void AddCoins(int amount)
+    {
+        coins += amount;
+
+        UpdateCoinsUI();
+    }
+
+    void UpdateCoinsUI()
+    {
+        if (coinsText != null)
+        {
+            coinsText.text = "Coins: " + coins;
+        }
+    }
+
+    // ŚMIERĆ
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Obstacle"))
@@ -135,7 +156,6 @@ public class ChickenMovement : MonoBehaviour
         }
     }
 
-    // ŚMIERĆ
     void Die()
     {
         isDead = true;
@@ -147,7 +167,6 @@ public class ChickenMovement : MonoBehaviour
         Invoke("RestartLevel", 1f);
     }
 
-    // RESTART SCENY
     void RestartLevel()
     {
         SceneManager.LoadScene(
@@ -155,7 +174,6 @@ public class ChickenMovement : MonoBehaviour
         );
     }
 
-    // PODGLĄD GROUNDCHECKA
     void OnDrawGizmosSelected()
     {
         if (groundCheck == null)

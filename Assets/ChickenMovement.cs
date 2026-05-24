@@ -2,16 +2,12 @@ using UnityEngine;
 
 public class ChickenMovement : MonoBehaviour
 {
-    [Header("Movement")]
     public float moveSpeed = 5f;
-
-    [Header("Jump")]
-    public float jumpForce = 8f;
+    public float jumpForce = 10f;
     public int maxJumps = 2;
 
-    [Header("Ground Check")]
     public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
+    public float groundCheckRadius = 0.35f;
     public LayerMask groundLayer;
 
     private Rigidbody2D rb;
@@ -31,29 +27,28 @@ public class ChickenMovement : MonoBehaviour
 
     void Update()
     {
-        // LEWO / PRAWO
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        // SPRAWDZANIE ZIEMI
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
             groundLayer
         );
 
-        // RESET SKOKÓW
-        if (isGrounded)
+        if (isGrounded && rb.linearVelocity.y <= 0.01f)
         {
             jumpCount = 0;
+
+            // POWRÓT DO IDLE
+            anim.Play("Idle");
         }
 
-        // SKOK
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
         {
             Jump();
         }
 
-        // OBRACANIE SPRITE
+        // OBRÓT
         if (moveInput > 0)
         {
             transform.localScale = new Vector3(1, 1, 1);
@@ -62,18 +57,10 @@ public class ChickenMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(-1, 1, 1);
         }
-
-        // ANIMACJE
-        anim.SetBool("isRunning", moveInput != 0 && isGrounded);
-
-        anim.SetBool("isGrounded", isGrounded);
-
-        anim.SetFloat("yVelocity", rb.linearVelocity.y);
     }
 
     void FixedUpdate()
     {
-        // RUCH
         rb.linearVelocity = new Vector2(
             moveInput * moveSpeed,
             rb.linearVelocity.y
@@ -82,13 +69,11 @@ public class ChickenMovement : MonoBehaviour
 
     void Jump()
     {
-        // RESET OPADANIA
         rb.linearVelocity = new Vector2(
             rb.linearVelocity.x,
             0f
         );
 
-        // DODANIE SI£Y SKOKU
         rb.AddForce(
             Vector2.up * jumpForce,
             ForceMode2D.Impulse
@@ -96,28 +81,14 @@ public class ChickenMovement : MonoBehaviour
 
         jumpCount++;
 
-        // ANIMACJE SKOKU
+        // ZA KA¯DYM RAZEM START OD POCZ¥TKU
         if (jumpCount == 1)
         {
-            anim.SetTrigger("jump");
+            anim.Play("Jump", 0, 0f);
         }
         else if (jumpCount == 2)
         {
-            anim.SetTrigger("doubleJump");
+            anim.Play("DoubleJump", 0, 0f);
         }
-    }
-
-    // RYSOWANIE GROUND CHECKA
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck == null)
-            return;
-
-        Gizmos.color = Color.red;
-
-        Gizmos.DrawWireSphere(
-            groundCheck.position,
-            groundCheckRadius
-        );
     }
 }

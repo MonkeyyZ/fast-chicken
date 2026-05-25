@@ -3146,7 +3146,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChickenMovement
   moveSpeed: 8
   jumpForce: 6.7
-  maxJumps: 9
+  maxJumps: 999
   groundCheck: {fileID: 33909818}
   groundCheckRadius: 0.2
   groundLayer:

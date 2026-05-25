@@ -28,8 +28,6 @@ public class PlayerController : MonoBehaviour
 
     private int jumpCount;
 
-    private bool isDead = false;
-
     private int coins = 0;
 
     void Start()
@@ -42,10 +40,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (isDead)
-            return;
-
-        // RUCH
+        // RUCH LEWO PRAWO
         moveInput = Input.GetAxisRaw("Horizontal");
 
         // SPRAWDZANIE ZIEMI
@@ -55,19 +50,10 @@ public class PlayerController : MonoBehaviour
             groundLayer
         );
 
-        // RESET SKOKÃ“W
-        if (isGrounded && rb.linearVelocity.y <= 0.01f)
+        // RESET SKOKÓW
+        if (isGrounded)
         {
             jumpCount = 0;
-
-            if (moveInput == 0)
-            {
-                anim.Play("Idle");
-            }
-            else
-            {
-                anim.Play("Run");
-            }
         }
 
         // SKOK
@@ -78,29 +64,31 @@ public class PlayerController : MonoBehaviour
         }
 
         // ANIMACJA BIEGU
-        if (isGrounded && moveInput != 0)
+        if (isGrounded)
         {
-            anim.Play("Run");
+            if (moveInput != 0)
+            {
+                anim.Play("Run");
+            }
+            else
+            {
+                anim.Play("Idle");
+            }
         }
 
-        // OBRÃ“T
+        // OBRÓT POSTACI
         if (moveInput > 0)
         {
-            transform.localScale =
-                new Vector3(1, 1, 1);
+            transform.localScale = new Vector3(1, 1, 1);
         }
         else if (moveInput < 0)
         {
-            transform.localScale =
-                new Vector3(-1, 1, 1);
+            transform.localScale = new Vector3(-1, 1, 1);
         }
     }
 
     void FixedUpdate()
     {
-        if (isDead)
-            return;
-
         rb.linearVelocity = new Vector2(
             moveInput * moveSpeed,
             rb.linearVelocity.y
@@ -109,11 +97,13 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
+        // RESET VELOCITY Y
         rb.linearVelocity = new Vector2(
             rb.linearVelocity.x,
             0f
         );
 
+        // SI£A SKOKU
         rb.AddForce(
             Vector2.up * jumpForce,
             ForceMode2D.Impulse
@@ -121,6 +111,7 @@ public class PlayerController : MonoBehaviour
 
         jumpCount++;
 
+        // ANIMACJE
         if (jumpCount == 1)
         {
             anim.Play("Jump", 0, 0f);
@@ -131,7 +122,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // ZBIERANIE COINÃ“W
+    // ZBIERANIE COINÓW
     public void AddCoins(int amount)
     {
         coins += amount;
@@ -143,37 +134,23 @@ public class PlayerController : MonoBehaviour
     {
         if (coinsText != null)
         {
-            coinsText.text = "Coins: " + coins;
+            coinsText.text = coins + "/5";
         }
     }
 
-    // ÅšMIERÄ†
+    // ŒMIERÆ
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Obstacle"))
+        if (collision.CompareTag("Obstacle")
+            || collision.CompareTag("Enemy"))
         {
-            Die();
+            SceneManager.LoadScene(
+                SceneManager.GetActiveScene().buildIndex
+            );
         }
     }
 
-    void Die()
-    {
-        isDead = true;
-
-        rb.linearVelocity = Vector2.zero;
-
-        anim.Play("Death");
-
-        Invoke("RestartLevel", 1f);
-    }
-
-    void RestartLevel()
-    {
-        SceneManager.LoadScene(
-            SceneManager.GetActiveScene().buildIndex
-        );
-    }
-
+    // PODGL¥D GROUNDCHECKA
     void OnDrawGizmosSelected()
     {
         if (groundCheck == null)
